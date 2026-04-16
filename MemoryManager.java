@@ -1,24 +1,13 @@
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.io.*;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
-class Memoryobject {
+class MemoryObject {
     String id;
     int referenceCount;
 
-    Memoryobject(String id) {
+    MemoryObject(String id) {
         this.id = id;
         this.referenceCount = 0;
     }
@@ -26,43 +15,37 @@ class Memoryobject {
     @Override
     public String toString() {
         return "MemoryObject{" +
-        "id='" + id + '\'' +
-        ", referenceCount=" + referenceCount +
-        '"}';
+                "id='" + id + '\'' +
+                ", referenceCount=" + referenceCount +
+                '}';
     }
 }
 
 class MemoryManager {
-    private ConcurrentHashMap<String, MemoryObject> memoryPool = new ConcurrentHashMap<>();
+    // Implement the MemoryManager class here
 
     public void createObject(String objectId) {
-        memoryPool.putIfAbsent(objectId, new MemoryObject(objectId));
+        // Write your code here
     }
 
     public void addReference(String objectId) {
-        memoryPool.computeIfAbsent(objectId, MemoryObject::new).referenceCount.incrementAndGet();
+        // Write your code here
     }
 
     public void removeReference(String objectId) {
-        memoryPool.computeIfAbsent(objectId, MemoryObject::new).referenceCount.decrementAndGet();
+        // Write your code here
     }
 
-    public synchronized void garbageCollect() {
-        memoryPool.entrySet().removeIf(e -> e.getValue().referenceCount.get() <= 0);
+    public void garbageCollect() {
+        // Write your code here
     }
 
     public List<MemoryObject> getMemoryPool() {
-        if (memoryPool.size() > 3) {
-            garbageCollect();
-        }
-        return memoryPool.values().stream()
-                .filter(obj -> obj.referenceCount.get() >= 0)
-                .sorted(Comparator.comparing(obj -> obj.objectId))
-                .collect(Collectors.toList());
+        // Write your code here
     }
 }
 
-class Solution {
+public class Solution {
     public static void executeCommand(String command, MemoryManager memoryManager) {
         String[] commandParts = command.split(" ", 3);
         String action = commandParts[0];
@@ -72,20 +55,22 @@ class Solution {
         } else if (action.equals("removeReference")) {
             String object = commandParts[1];
             memoryManager.removeReference(object);
-        } else if (action.equals("garbageCollect")) {
-            memoryManager.garbageCollect();
         }
     }
 
     public static void main(String[] args) throws IOException, ExecutionException, InterruptedException {
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
         BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(System.getenv("OUTPUT_PATH")));
+
         int commandsCount = Integer.parseInt(bufferedReader.readLine().trim());
+
         List<String> commands = new ArrayList<>();
+
         for (int i = 0; i < commandsCount; i++) {
             String commandsItem = bufferedReader.readLine();
             commands.add(commandsItem);
         }
+
         ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(5);
         List<Future<Void>> futures = new ArrayList<>();
 
@@ -98,24 +83,28 @@ class Solution {
             futures.add(future);
         }
 
-        // Wait for all tasks to complete
         for (Future<Void> future : futures) {
             future.get();
         }
+
         threadPoolExecutor.shutdown();
 
         // Collect the memory pool state after all commands have been processed
         List<String> result = new ArrayList<>();
         for (MemoryObject memoryObject : memoryManager.getMemoryPool()) {
             result.add(memoryObject.toString());
+
         }
+
         for (int i = 0; i < result.size(); i++) {
             bufferedWriter.write(result.get(i));
+
             if (i != result.size() - 1) {
                 bufferedWriter.write("\n");
             }
         }
         bufferedWriter.newLine();
+
         bufferedReader.close();
         bufferedWriter.close();
     }
