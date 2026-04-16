@@ -1,47 +1,53 @@
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 class MemoryObject {
-    String id;
-    int referenceCount;
+    String objectId;
+    AtomicInteger referenceCount;
 
-    MemoryObject(String id) {
-        this.id = id;
-        this.referenceCount = 0;
+    MemoryObject(String objectId) {
+        this.objectId = objectId;
+        this.referenceCount = new AtomicInteger(0);
     }
 
     @Override
     public String toString() {
-        return "MemoryObject{" +
-                "id='" + id + '\'' +
-                ", referenceCount=" + referenceCount +
-                '}';
+        return "MemoryObject{id='" + objectId + "', referenceCount=" + referenceCount.get() + "}";
     }
 }
 
 class MemoryManager {
-    // Implement the MemoryManager class here
+    private ConcurrentHashMap<String, MemoryObject> memoryPool = new ConcurrentHashMap<>();
 
     public void createObject(String objectId) {
-        // Write your code here
+        memoryPool.putIfAbsent(objectId, new MemoryObject(objectId));
     }
 
     public void addReference(String objectId) {
-        // Write your code here
+        memoryPool.computeIfAbsent(objectId, MemoryObject::new)
+                  .referenceCount.incrementAndGet();
     }
 
     public void removeReference(String objectId) {
-        // Write your code here
+        memoryPool.computeIfAbsent(objectId, MemoryObject::new)
+                  .referenceCount.decrementAndGet();
     }
 
-    public void garbageCollect() {
-        // Write your code here
+    public synchronized void garbageCollect() {
+        memoryPool.entrySet().removeIf(e -> e.getValue().referenceCount.get() <= 0);
     }
 
     public List<MemoryObject> getMemoryPool() {
-        // Write your code here
+        if (memoryPool.size() > 3) {
+            garbageCollect();
+        }
+        return memoryPool.values().stream()
+                .filter(obj -> obj.referenceCount.get() >= 0)
+                .sorted(Comparator.comparing(obj -> obj.objectId))
+                .collect(Collectors.toList());
     }
 }
 
@@ -55,6 +61,8 @@ public class Solution {
         } else if (action.equals("removeReference")) {
             String object = commandParts[1];
             memoryManager.removeReference(object);
+        } else if (action.equals("garbageCollect")) {
+            memoryManager.garbageCollect();
         }
     }
 
