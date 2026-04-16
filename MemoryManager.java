@@ -14,18 +14,21 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-class MemoryObject {
-    String objectId;
-    AtomicInteger referenceCount;
+class Memoryobject {
+    String id;
+    int referenceCount;
 
-    MemoryObject(String objectId) {
-        this.objectId = objectId;
-        this.referenceCount = new AtomicInteger(0);
+    Memoryobject(String id) {
+        this.id = id;
+        this.referenceCount = 0;
     }
 
     @Override
     public String toString() {
-        return "MemoryObject{id='" + objectId + "', referenceCount=" + referenceCount.get() + "}";
+        return "MemoryObject{" +
+        "id='" + id + '\'' +
+        ", referenceCount=" + referenceCount +
+        '"}';
     }
 }
 
