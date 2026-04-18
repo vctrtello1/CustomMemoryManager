@@ -32,8 +32,10 @@ class MemoryManager {
     }
 
     public void removeReference(String objectId) {
-        memoryPool.computeIfAbsent(objectId, MemoryObject::new)
-                  .referenceCount.decrementAndGet();
+        MemoryObject obj = memoryPool.get(objectId);
+        if (obj != null) {
+            obj.referenceCount.decrementAndGet();
+        }
     }
 
     public synchronized void garbageCollect() {
@@ -41,12 +43,9 @@ class MemoryManager {
     }
 
     public List<MemoryObject> getMemoryPool() {
-        if (memoryPool.size() > 3) {
-            garbageCollect();
-        }
-        return memoryPool.values().stream()
-                .filter(obj -> obj.referenceCount.get() >= 0)
-                .sorted(Comparator.comparing(obj -> obj.objectId))
+        garbageCollect();
+        return new ArrayList<>(memoryPool.values()).stream()
+                .sorted(Comparator.comparing((MemoryObject obj) -> obj.objectId))
                 .collect(Collectors.toList());
     }
 }
